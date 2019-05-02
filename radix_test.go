@@ -8,6 +8,99 @@ import (
 	"testing"
 )
 
+//add by mo
+func TestInsert(t *testing.T) {
+	r := New()
+	ss := map[string]string{
+		"":    "nothing",
+		"ab":  "ab",
+		"abc": "abc",
+	}
+	for key, v := range ss {
+		_, exsit := r.Insert(key, v)
+		if exsit {
+			t.Fatalf("")
+		}
+	}
+
+	for key, v := range ss {
+		vv, exsit := r.Get(key)
+		if !exsit {
+			t.Fatalf("")
+		}
+		vvv, ok := vv.(string)
+		if !ok || vvv != v {
+			t.Fatalf("key = %s, v=%s, vvv=%s\n", key, v, vvv)
+		}
+		fmt.Printf("key = %s, v=%s\n", key, v)
+	}
+
+}
+
+func TestWild(t *testing.T) {
+	r := New()
+	ss := map[string]string{
+		"":      "nothing",
+		"ab*":   "ab",
+		"abc":   "abc",
+		"abde*": "abde",
+	}
+	for key, v := range ss {
+		_, exsit := r.Insert(key, v)
+		if exsit {
+			t.Fatalf("")
+		}
+	}
+
+	for key, v := range ss {
+		vv, exsit := r.Get(key)
+		if !exsit {
+			t.Fatalf("")
+		}
+		vvv, ok := vv.(string)
+		if !ok || vvv != v {
+			t.Fatalf("key = %s, v=%s, vvv=%s\n", key, v, vvv)
+		}
+		//fmt.Printf("key = %s, v=%s\n", key, v)
+	}
+	//abd match ab*, abdef should match abde*
+	vv, exsit := r.Get("abd")
+	if !exsit {
+		t.Fatalf("")
+	}
+	wildv, exsit := r.Get("ab*")
+	if !exsit {
+		t.Fatalf("")
+	}
+	if vv.(string) != wildv.(string) {
+		t.Fatalf("key = %s, v=%s, wkey=%s, wildv=%s\n", "abd", vv.(string), "ab*", wildv.(string))
+	}
+	//fmt.Printf(" v=%s,wildv=%s\n", vv.(string), wildv.(string))
+
+	//abdef should match abde*
+	v1, exsit := r.Get("abdef")
+	if !exsit {
+		t.Fatalf("")
+	}
+	wildv1, exsit := r.Get("abde*")
+	if !exsit {
+		t.Fatalf("")
+	}
+	if v1.(string) != wildv1.(string) {
+		t.Fatalf("key = %s, v1=%s, wkey=%s, wildv1=%s\n", "abdef", v1.(string), "abde*", wildv1.(string))
+	}
+	//check with LongestPrefix, LongestPrefix("abdef") should get same vlaue with wild key=abde*
+	key, v2, ok := r.LongestPrefix("abdef")
+	if !ok {
+		t.Fatalf("")
+	}
+	if key != "abde" || v2.(string) != wildv1.(string) {
+		t.Fatalf("")
+	}
+}
+
+//end by mo
+
 func TestRadix(t *testing.T) {
 	var min, max string
 	inp := make(map[string]interface{})

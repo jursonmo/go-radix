@@ -34,5 +34,16 @@ m, _, _ := r.LongestPrefix("foozip")
 if m != "foo" {
     panic("should be foo")
 }
+
+r.Insert("abc*", "wildstring")
+v, _ := r.Get("abcd")
+if v.(string) != "wildstring" {
+  panic("should be wildstring")
+}
+
+_, v1, _ := r.LongestPrefix("abcd")
+if v1.(string) != v.(string) {
+   panic("LongestPrefix should be as same as wildcard")
+}
 ```
 

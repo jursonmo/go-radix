@@ -23,6 +23,8 @@ type edge struct {
 }
 
 type node struct {
+	//add by mo, if include *, wild is true, like: *.abc.com, match efg.abc.com
+	wild bool
 	// leaf is used to store possible leaf
 	leaf *leafNode
 
@@ -146,6 +148,16 @@ func longestPrefix(k1, k2 string) int {
 // an existing entry. Returns if updated.
 func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 	var parent *node
+	wild := false
+	//if only *, how todo
+	if s == "*" {
+		panic("not support only '*' for temporary")
+	}
+	if len(s) > 0 && s[len(s)-1] == '*' {
+		s = s[:len(s)-1]
+		wild = true
+		//fmt.Printf("========s=%s, wild = true========\n", s)
+	}
 	n := t.root
 	search := s
 	for {
@@ -161,6 +173,7 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 				key: s,
 				val: v,
 			}
+			n.wild = wild
 			t.size++
 			return nil, false
 		}
@@ -179,6 +192,7 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 						val: v,
 					},
 					prefix: search,
+					wild:   wild,
 				},
 			}
 			parent.addEdge(e)
@@ -226,6 +240,7 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 			node: &node{
 				leaf:   leaf,
 				prefix: search,
+				wild:   wild,
 			},
 		})
 		return nil, false
@@ -347,9 +362,17 @@ func (n *node) mergeChild() {
 // Get is used to lookup a specific key, returning
 // the value and if it was found
 func (t *Tree) Get(s string) (interface{}, bool) {
+	var lastWildNode *node
+	if len(s) > 0 && s[len(s)-1] == '*' {
+		s = s[:len(s)-1]
+	}
 	n := t.root
 	search := s
 	for {
+		//fmt.Printf("node = %#v\n", n)
+		if n.wild {
+			lastWildNode = n
+		}
 		// Check for key exhaution
 		if len(search) == 0 {
 			if n.isLeaf() {
@@ -370,6 +393,9 @@ func (t *Tree) Get(s string) (interface{}, bool) {
 		} else {
 			break
 		}
+	}
+	if lastWildNode != nil {
+		return lastWildNode.leaf.val, true
 	}
 	return nil, false
 }
