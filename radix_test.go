@@ -63,6 +63,7 @@ func TestWild(t *testing.T) {
 		}
 		//fmt.Printf("key = %s, v=%s\n", key, v)
 	}
+
 	//abd match ab*, abdef should match abde*
 	vv, exsit := r.Get("abd")
 	if !exsit {
@@ -96,6 +97,33 @@ func TestWild(t *testing.T) {
 	}
 	if key != "abde" || v2.(string) != wildv1.(string) {
 		t.Fatalf("")
+	}
+}
+func TestInsertDomain(t *testing.T) {
+	r := New()
+	ss := map[string]string{
+		"*.baidu.com":   "123.125.114.144",
+		"www.baidu.com": "123.125.114.145",
+	}
+	for key, v := range ss {
+		_, exsit := r.InsertDomain(key, v)
+		if exsit {
+			t.Fatalf("")
+		}
+	}
+	checklist := map[string]string{
+		"aaa.baidu.com": "123.125.114.144", //match "*.baidu.com"
+		"ww.baidu.com":  "123.125.114.144", //match "*.baidu.com"
+		"www.baidu.com": "123.125.114.145", //match "www.baidu.com"
+	}
+	for domain, ip := range checklist {
+		v, err := r.FindDomain(domain)
+		if err != nil {
+			t.Fatalf("")
+		}
+		if v.(string) != ip {
+			t.Fatalf("v=%s, ip=%s\n", v.(string), ip)
+		}
 	}
 }
 

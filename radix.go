@@ -1,9 +1,12 @@
 package radix
 
 import (
+	"errors"
 	"sort"
 	"strings"
 )
+
+var ErrNotFound = errors.New("notFound")
 
 // WalkFn is used when walking the tree. Takes a
 // key and value, returning if iteration should
@@ -144,6 +147,19 @@ func longestPrefix(k1, k2 string) int {
 	return i
 }
 
+func reverseString(s string) string {
+	r := []rune(s)
+	for l, h := 0, len(r)-1; l < h; l, h = l+1, h-1 {
+		r[l], r[h] = r[h], r[l]
+	}
+
+	return string(r)
+}
+
+func (t *Tree) InsertDomain(s string, v interface{}) (interface{}, bool) {
+	return t.Insert(reverseString(s), v)
+}
+
 // Insert is used to add a newentry or update
 // an existing entry. Returns if updated.
 func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
@@ -245,6 +261,10 @@ func (t *Tree) Insert(s string, v interface{}) (interface{}, bool) {
 		})
 		return nil, false
 	}
+}
+
+func (t *Tree) DeleteDomain(s string) (interface{}, bool) {
+	return t.Delete(reverseString(s))
 }
 
 // Delete is used to delete a key, returning the previous
@@ -357,6 +377,13 @@ func (n *node) mergeChild() {
 	n.prefix = n.prefix + child.prefix
 	n.leaf = child.leaf
 	n.edges = child.edges
+}
+
+func (t *Tree) FindDomain(name string) (interface{}, error) {
+	if v, ok := t.Get(reverseString(name)); ok {
+		return v, nil
+	}
+	return nil, ErrNotFound
 }
 
 // Get is used to lookup a specific key, returning
